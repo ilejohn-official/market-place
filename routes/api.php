@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SellerProfileController;
+use App\Http\Controllers\ServiceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,10 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
+// Public service endpoints
+Route::get('/services', [ServiceController::class, 'index']);
+Route::get('/services/{id}', [ServiceController::class, 'show']);
+
 // Public seller profile endpoint
 Route::get('/sellers/{sellerId}/profile', [SellerProfileController::class, 'showPublic']);
 
@@ -34,4 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/seller', [SellerProfileController::class, 'store']);
     Route::get('/profile/seller', [SellerProfileController::class, 'show']);
     Route::put('/profile/seller', [SellerProfileController::class, 'update']);
+
+    // Service routes (seller only for create/update/delete)
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::put('/services/{id}', [ServiceController::class, 'update']);
+    Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
+    Route::get('/my-services', [ServiceController::class, 'myServices']);
 });
