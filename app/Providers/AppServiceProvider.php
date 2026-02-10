@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Events\BookingCreated;
+use App\Events\CallInitiated;
 use App\Listeners\NotifySellerBookingCreated;
+use App\Listeners\NotifyReceiverCallIncoming;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Event;
 
@@ -23,5 +25,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(BookingCreated::class, NotifySellerBookingCreated::class);
+        Event::listen(CallInitiated::class, NotifyReceiverCallIncoming::class);
     }
 }

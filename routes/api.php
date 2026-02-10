@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\CallController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\SellerProfileController;
 use App\Http\Controllers\ServiceController;
 use Illuminate\Http\Request;
@@ -51,4 +53,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::get('/bookings', [BookingController::class, 'index']);
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
+
+    // Message routes
+    Route::post('/bookings/{id}/messages', [MessageController::class, 'store']);
+    Route::get('/bookings/{id}/messages', [MessageController::class, 'index']);
+    Route::patch('/messages/{id}/read', [MessageController::class, 'markRead']);
+
+    // Call routes
+    Route::post('/bookings/{id}/calls', [CallController::class, 'store']);
+    Route::patch('/calls/{id}', [CallController::class, 'update']);
 });
