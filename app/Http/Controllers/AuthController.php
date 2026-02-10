@@ -15,9 +15,6 @@ class AuthController extends Controller
 {
     /**
      * Register a new user
-     *
-     * @param RegisterRequest $request
-     * @return JsonResponse
      */
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -56,15 +53,12 @@ class AuthController extends Controller
 
     /**
      * Login user
-     *
-     * @param LoginRequest $request
-     * @return JsonResponse
      */
     public function login(LoginRequest $request): JsonResponse
     {
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials',
@@ -88,9 +82,6 @@ class AuthController extends Controller
 
     /**
      * Get authenticated user profile
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function profile(Request $request): JsonResponse
     {
@@ -102,9 +93,6 @@ class AuthController extends Controller
 
     /**
      * Update user profile
-     *
-     * @param UpdateProfileRequest $request
-     * @return JsonResponse
      */
     public function updateProfile(UpdateProfileRequest $request): JsonResponse
     {
@@ -141,14 +129,11 @@ class AuthController extends Controller
 
     /**
      * Logout user
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
         $token = $request->user()->currentAccessToken();
-        
+
         if ($token) {
             $token->delete();
         }

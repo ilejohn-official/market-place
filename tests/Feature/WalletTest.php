@@ -7,7 +7,7 @@ use Tests\TestCase;
 
 class WalletTest extends TestCase
 {
-    public function test_user_can_view_wallet_balance(): void
+    public function test_user_can_view_wallet(): void
     {
         $user = User::factory()->create();
 

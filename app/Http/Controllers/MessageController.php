@@ -24,7 +24,7 @@ class MessageController extends Controller
     public function store(MessageRequest $request, int $id): JsonResponse
     {
         $booking = Booking::find($id);
-        if (!$booking) {
+        if (! $booking) {
             return response()->json([
                 'message' => 'Booking not found',
             ], 404);
@@ -54,7 +54,7 @@ class MessageController extends Controller
     public function index(Request $request, int $id): JsonResponse
     {
         $booking = Booking::find($id);
-        if (!$booking) {
+        if (! $booking) {
             return response()->json([
                 'message' => 'Booking not found',
             ], 404);
@@ -79,7 +79,7 @@ class MessageController extends Controller
     public function markRead(Request $request, int $id): JsonResponse
     {
         $message = Message::find($id);
-        if (!$message) {
+        if (! $message) {
             return response()->json([
                 'message' => 'Message not found',
             ], 404);

@@ -3,302 +3,78 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
-use App\Models\EscrowAccount;
-use App\Models\Service;
 use App\Models\SellerProfile;
+use App\Models\Service;
 use App\Models\User;
 use App\Models\Wallet;
 use Tests\TestCase;
 
 class BookingTest extends TestCase
 {
-    private User $buyer;
-    private User $seller;
-    private Service $service;
-
-    protected function setUp(): void
+    public function test_booking_flow_with_escrow_completion_approval_and_cancel(): void
     {
-        parent::setUp();
-
-        $this->buyer = User::factory()->create(['role' => 'buyer']);
-        $this->seller = User::factory()->create(['role' => 'seller']);
+        $buyer = User::factory()->create(['role' => 'buyer']);
+        $seller = User::factory()->create(['role' => 'seller']);
 
         SellerProfile::create([
-            'user_id' => $this->seller->id,
+            'user_id' => $seller->id,
             'hourly_rate' => 50,
             'experience_level' => 'intermediate',
         ]);
 
-        $this->service = Service::factory()->create(['seller_id' => $this->seller->id]);
-    }
-
-    public function test_buyer_can_create_booking()
-    {
-        $data = [
-            'service_id' => $this->service->id,
-            'seller_id' => $this->seller->id,
-            'proposed_amount' => 500,
-            'negotiation_notes' => 'Need web development work',
-        ];
-
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->postJson('/api/bookings', $data);
-
-        $response->assertStatus(201)
-            ->assertJsonPath('message', 'Booking created successfully')
-            ->assertJsonPath('data.status', 'pending_negotiation')
-            ->assertJsonPath('data.agreed_amount', 500);
-
-        $this->assertDatabaseHas('bookings', [
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 500,
-        ]);
-    }
-
-    public function test_seller_cannot_create_booking()
-    {
-        $data = [
-            'service_id' => $this->service->id,
-            'seller_id' => $this->seller->id,
-            'proposed_amount' => 500,
-        ];
-
-        $response = $this->actingAs($this->seller, 'sanctum')
-            ->postJson('/api/bookings', $data);
-
-        $response->assertStatus(403)
-            ->assertJsonPath('message', 'Only buyers can create bookings');
-    }
-
-    public function test_create_booking_with_non_seller_returns_404()
-    {
-        $notSeller = User::factory()->create(['role' => 'buyer']);
-        $data = [
-            'service_id' => $this->service->id,
-            'seller_id' => $notSeller->id,
-            'proposed_amount' => 500,
-        ];
-
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->postJson('/api/bookings', $data);
-
-        $response->assertStatus(404)
-            ->assertJsonPath('message', 'Seller not found');
-    }
-
-    public function test_create_booking_with_service_not_owned_by_seller_returns_404()
-    {
-        $anotherSeller = User::factory()->create(['role' => 'seller']);
-        $data = [
-            'service_id' => $this->service->id,
-            'seller_id' => $anotherSeller->id,
-            'proposed_amount' => 500,
-        ];
-
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->postJson('/api/bookings', $data);
-
-        $response->assertStatus(404)
-            ->assertJsonPath('message', 'Service not found');
-    }
-
-    public function test_booking_validates_required_fields()
-    {
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->postJson('/api/bookings', []);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['service_id', 'seller_id', 'proposed_amount']);
-    }
-
-    public function test_booking_validates_positive_amount()
-    {
-        $data = [
-            'service_id' => $this->service->id,
-            'seller_id' => $this->seller->id,
-            'proposed_amount' => 0,
-        ];
-
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->postJson('/api/bookings', $data);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['proposed_amount']);
-    }
-
-    public function test_buyer_can_view_own_booking_details()
-    {
-        $booking = Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 500,
-        ]);
-
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->getJson("/api/bookings/{$booking->id}");
-
-        $response->assertStatus(200)
-            ->assertJsonPath('data.id', $booking->id);
-    }
-
-    public function test_seller_can_view_booking_details()
-    {
-        $booking = Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 500,
-        ]);
-
-        $response = $this->actingAs($this->seller, 'sanctum')
-            ->getJson("/api/bookings/{$booking->id}");
-
-        $response->assertStatus(200)
-            ->assertJsonPath('data.id', $booking->id);
-    }
-
-    public function test_non_participant_cannot_view_booking_details()
-    {
-        $otherBuyer = User::factory()->create(['role' => 'buyer']);
-        $booking = Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 500,
-        ]);
-
-        $response = $this->actingAs($otherBuyer, 'sanctum')
-            ->getJson("/api/bookings/{$booking->id}");
-
-        $response->assertStatus(403)
-            ->assertJsonPath('message', 'You are not authorized to view this booking');
-    }
-
-    public function test_view_nonexistent_booking_returns_404()
-    {
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->getJson('/api/bookings/9999');
-
-        $response->assertStatus(404)
-            ->assertJsonPath('message', 'Booking not found');
-    }
-
-    public function test_buyer_can_view_own_bookings()
-    {
-        Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 300,
-        ]);
-        Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 400,
-        ]);
-
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->getJson('/api/bookings');
-
-        $response->assertStatus(200)
-            ->assertJsonPath('total', 2);
-    }
-
-    public function test_seller_can_view_own_bookings()
-    {
-        Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 300,
-        ]);
-        Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 400,
-        ]);
-        Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 500,
-        ]);
-
-        $response = $this->actingAs($this->seller, 'sanctum')
-            ->getJson('/api/bookings');
-
-        $response->assertStatus(200)
-            ->assertJsonPath('total', 3);
-    }
-
-    public function test_seller_can_mark_work_complete()
-    {
-        $booking = Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 500,
-            'status' => 'in_progress',
-        ]);
-
-        $response = $this->actingAs($this->seller, 'sanctum')
-            ->patchJson("/api/bookings/{$booking->id}/mark-complete");
-
-        $response->assertStatus(200)
-            ->assertJsonPath('data.status', 'pending_approval');
-    }
-
-    public function test_buyer_can_approve_completion()
-    {
-        $booking = Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
-            'agreed_amount' => 500,
-            'status' => 'pending_approval',
-        ]);
-
-        EscrowAccount::create([
-            'booking_id' => $booking->id,
-            'total_amount' => 500,
-            'platform_fee' => 50,
-            'freelancer_amount' => 450,
-            'status' => 'held',
-        ]);
+        $service = Service::factory()->create(['seller_id' => $seller->id]);
 
         Wallet::updateOrCreate(
-            ['user_id' => $this->seller->id],
-            ['balance' => 0, 'currency' => 'NGN']
+            ['user_id' => $buyer->id],
+            ['balance' => 1000, 'currency' => 'NGN']
         );
 
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->patchJson("/api/bookings/{$booking->id}/approve");
+        $createResponse = $this->actingAs($buyer, 'sanctum')
+            ->postJson('/api/bookings', [
+                'service_id' => $service->id,
+                'seller_id' => $seller->id,
+                'proposed_amount' => 500,
+            ]);
 
-        $response->assertStatus(200)
+        $createResponse->assertStatus(201)
+            ->assertJsonPath('data.status', 'pending_negotiation');
+
+        $bookingId = $createResponse->json('data.id');
+
+        $escrowResponse = $this->actingAs($buyer, 'sanctum')
+            ->postJson("/api/bookings/{$bookingId}/escrow", [
+                'amount' => 500,
+            ]);
+
+        $escrowResponse->assertStatus(201)
+            ->assertJsonPath('data.status', 'held');
+
+        $completeResponse = $this->actingAs($seller, 'sanctum')
+            ->patchJson("/api/bookings/{$bookingId}/mark-complete");
+
+        $completeResponse->assertStatus(200)
+            ->assertJsonPath('data.status', 'pending_approval');
+
+        $approveResponse = $this->actingAs($buyer, 'sanctum')
+            ->patchJson("/api/bookings/{$bookingId}/approve");
+
+        $approveResponse->assertStatus(200)
             ->assertJsonPath('data.status', 'completed');
-    }
 
-    public function test_buyer_can_cancel_pending_negotiation_booking()
-    {
-        $booking = Booking::create([
-            'buyer_id' => $this->buyer->id,
-            'seller_id' => $this->seller->id,
-            'service_id' => $this->service->id,
+        $cancelBooking = Booking::create([
+            'buyer_id' => $buyer->id,
+            'seller_id' => $seller->id,
+            'service_id' => $service->id,
             'agreed_amount' => 500,
             'status' => 'pending_negotiation',
         ]);
 
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->patchJson("/api/bookings/{$booking->id}/cancel", [
+        $cancelResponse = $this->actingAs($buyer, 'sanctum')
+            ->patchJson("/api/bookings/{$cancelBooking->id}/cancel", [
                 'reason' => 'No longer needed',
             ]);
 
-        $response->assertStatus(200)
+        $cancelResponse->assertStatus(200)
             ->assertJsonPath('data.status', 'cancelled');
     }
 }

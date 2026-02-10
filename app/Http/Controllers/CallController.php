@@ -23,7 +23,7 @@ class CallController extends Controller
     public function store(CallRequest $request, int $id): JsonResponse
     {
         $booking = Booking::find($id);
-        if (!$booking) {
+        if (! $booking) {
             return response()->json([
                 'message' => 'Booking not found',
             ], 404);
@@ -53,7 +53,7 @@ class CallController extends Controller
     public function update(CallRequest $request, int $id): JsonResponse
     {
         $call = Call::find($id);
-        if (!$call) {
+        if (! $call) {
             return response()->json([
                 'message' => 'Call not found',
             ], 404);

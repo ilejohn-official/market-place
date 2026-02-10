@@ -17,12 +17,12 @@ class BookingService
      */
     public function createBooking(User $buyer, array $data): Booking
     {
-        if (!$buyer->isBuyer()) {
+        if (! $buyer->isBuyer()) {
             throw new Exception('Only buyers can create bookings');
         }
 
         $seller = User::find($data['seller_id']);
-        if (!$seller || !$seller->isSeller()) {
+        if (! $seller || ! $seller->isSeller()) {
             throw new Exception('Seller not found');
         }
 
@@ -30,7 +30,7 @@ class BookingService
             ->where('seller_id', $seller->id)
             ->first();
 
-        if (!$service) {
+        if (! $service) {
             throw new Exception('Service not found');
         }
 
@@ -55,7 +55,7 @@ class BookingService
     {
         $booking = Booking::find($bookingId);
 
-        if (!$booking) {
+        if (! $booking) {
             throw new Exception('Booking not found');
         }
 
@@ -71,7 +71,7 @@ class BookingService
      */
     public function getUserBookings(User $user, int $page = 1, int $limit = 15, array $filters = []): array
     {
-        if (!$user->isBuyer() && !$user->isSeller()) {
+        if (! $user->isBuyer() && ! $user->isSeller()) {
             throw new Exception('Invalid user role');
         }
 
@@ -83,7 +83,7 @@ class BookingService
             $query->where('seller_id', $user->id);
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
@@ -104,7 +104,7 @@ class BookingService
      */
     public function markComplete(User $seller, Booking $booking): Booking
     {
-        if (!$seller->isSeller() || $booking->seller_id !== $seller->id) {
+        if (! $seller->isSeller() || $booking->seller_id !== $seller->id) {
             throw new Exception('You are not authorized to mark this booking complete');
         }
 

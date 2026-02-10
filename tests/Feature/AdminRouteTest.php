@@ -5,60 +5,26 @@ namespace Tests\Feature;
 use App\Models\Booking;
 use App\Models\Dispute;
 use App\Models\EscrowAccount;
-use App\Models\Service;
 use App\Models\SellerProfile;
+use App\Models\Service;
 use App\Models\User;
 use App\Models\Wallet;
 use Tests\TestCase;
 
 class AdminRouteTest extends TestCase
 {
-    public function test_admin_can_list_disputes(): void
+    public function test_admin_can_list_and_resolve_disputes(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-
         $buyer = User::factory()->create(['role' => 'buyer']);
         $seller = User::factory()->create(['role' => 'seller']);
+
         SellerProfile::create([
             'user_id' => $seller->id,
             'hourly_rate' => 50,
             'experience_level' => 'intermediate',
         ]);
-        $service = Service::factory()->create(['seller_id' => $seller->id]);
 
-        $booking = Booking::create([
-            'buyer_id' => $buyer->id,
-            'seller_id' => $seller->id,
-            'service_id' => $service->id,
-            'agreed_amount' => 500,
-            'status' => 'pending_approval',
-        ]);
-
-        Dispute::create([
-            'booking_id' => $booking->id,
-            'created_by_id' => $buyer->id,
-            'reason' => 'Issue',
-            'status' => 'open',
-        ]);
-
-        $response = $this->actingAs($admin, 'sanctum')
-            ->getJson('/api/disputes');
-
-        $response->assertStatus(200)
-            ->assertJsonPath('total', 1);
-    }
-
-    public function test_admin_can_resolve_dispute_release_to_seller(): void
-    {
-        $admin = User::factory()->create(['role' => 'admin']);
-
-        $buyer = User::factory()->create(['role' => 'buyer']);
-        $seller = User::factory()->create(['role' => 'seller']);
-        SellerProfile::create([
-            'user_id' => $seller->id,
-            'hourly_rate' => 50,
-            'experience_level' => 'intermediate',
-        ]);
         $service = Service::factory()->create(['seller_id' => $seller->id]);
 
         $booking = Booking::create([
@@ -89,12 +55,18 @@ class AdminRouteTest extends TestCase
             ['balance' => 0, 'currency' => 'NGN']
         );
 
-        $response = $this->actingAs($admin, 'sanctum')
+        $listResponse = $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/disputes');
+
+        $listResponse->assertStatus(200)
+            ->assertJsonPath('total', 1);
+
+        $resolveResponse = $this->actingAs($admin, 'sanctum')
             ->patchJson("/api/disputes/{$booking->dispute->id}/resolve", [
                 'resolution_decision' => 'release_to_seller',
             ]);
 
-        $response->assertStatus(200)
+        $resolveResponse->assertStatus(200)
             ->assertJsonPath('data.status', 'resolved')
             ->assertJsonPath('data.resolution_decision', 'release_to_seller');
 

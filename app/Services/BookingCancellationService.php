@@ -29,7 +29,7 @@ class BookingCancellationService
             throw new Exception('Booking cannot be cancelled at this stage');
         }
 
-        return DB::transaction(function () use ($user, $booking, $reason) {
+        return DB::transaction(function () use ($booking, $reason) {
             $escrow = $booking->escrowAccount;
             if ($escrow && $escrow->status === 'held') {
                 $escrow->update([

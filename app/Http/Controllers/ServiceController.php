@@ -46,7 +46,7 @@ class ServiceController extends Controller
     {
         $service = $this->serviceService->getServiceById($id);
 
-        if (!$service) {
+        if (! $service) {
             return response()->json([
                 'message' => 'Service not found',
             ], 404);

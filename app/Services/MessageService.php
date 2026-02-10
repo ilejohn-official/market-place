@@ -48,7 +48,7 @@ class MessageService
     public function markAsRead(User $user, Message $message): Message
     {
         $booking = $message->booking;
-        if (!$booking) {
+        if (! $booking) {
             throw new Exception('Booking not found');
         }
 

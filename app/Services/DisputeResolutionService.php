@@ -32,7 +32,7 @@ class DisputeResolutionService
         $booking = $dispute->booking;
         $escrow = $booking ? $booking->escrowAccount : null;
 
-        if (!$booking || !$escrow) {
+        if (! $booking || ! $escrow) {
             throw new Exception('Dispute booking or escrow not found');
         }
 

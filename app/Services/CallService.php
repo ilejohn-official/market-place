@@ -57,7 +57,7 @@ class CallService
 
         $updates = ['status' => $status];
 
-        if ($status === 'accepted' && !$call->started_at) {
+        if ($status === 'accepted' && ! $call->started_at) {
             $updates['started_at'] = now();
         }
 

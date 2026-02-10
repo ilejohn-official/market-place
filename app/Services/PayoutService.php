@@ -21,7 +21,7 @@ class PayoutService
 
     public function releaseFunds(User $buyer, Booking $booking): Booking
     {
-        if (!$buyer->isBuyer() || $booking->buyer_id !== $buyer->id) {
+        if (! $buyer->isBuyer() || $booking->buyer_id !== $buyer->id) {
             throw new Exception('You are not authorized to approve this booking');
         }
 
@@ -30,7 +30,7 @@ class PayoutService
         }
 
         $escrow = $booking->escrowAccount;
-        if (!$escrow || $escrow->status !== 'held') {
+        if (! $escrow || $escrow->status !== 'held') {
             throw new Exception('Escrow is not available for release');
         }
 

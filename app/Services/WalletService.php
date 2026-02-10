@@ -30,7 +30,7 @@ class WalletService
 
         return DB::transaction(function () use ($user, $amount) {
             $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->first();
-            if (!$wallet) {
+            if (! $wallet) {
                 $wallet = Wallet::create([
                     'user_id' => $user->id,
                     'balance' => 0,
@@ -54,7 +54,7 @@ class WalletService
 
         return DB::transaction(function () use ($user, $amount) {
             $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->first();
-            if (!$wallet) {
+            if (! $wallet) {
                 $wallet = Wallet::create([
                     'user_id' => $user->id,
                     'balance' => 0,

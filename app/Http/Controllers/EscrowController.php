@@ -23,7 +23,7 @@ class EscrowController extends Controller
     public function store(EscrowRequest $request, int $id): JsonResponse
     {
         $booking = Booking::find($id);
-        if (!$booking) {
+        if (! $booking) {
             return response()->json([
                 'message' => 'Booking not found',
             ], 404);
@@ -53,7 +53,7 @@ class EscrowController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $booking = Booking::find($id);
-        if (!$booking) {
+        if (! $booking) {
             return response()->json([
                 'message' => 'Booking not found',
             ], 404);

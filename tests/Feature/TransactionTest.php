@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 class TransactionTest extends TestCase
 {
-    public function test_user_can_view_transactions()
+    public function test_user_can_view_transactions(): void
     {
         $user = User::factory()->create();
 

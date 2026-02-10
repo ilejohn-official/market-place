@@ -13,7 +13,7 @@ class SellerProfileService
      */
     public function createOrUpdateProfile(User $user, array $data): SellerProfile
     {
-        if (!$user->isSeller()) {
+        if (! $user->isSeller()) {
             throw new Exception('Only sellers can create a profile');
         }
 
@@ -33,7 +33,7 @@ class SellerProfileService
      */
     public function getProfileByUser(User $user): ?SellerProfile
     {
-        if (!$user->isSeller()) {
+        if (! $user->isSeller()) {
             throw new Exception('Only sellers have profiles');
         }
 
@@ -53,13 +53,13 @@ class SellerProfileService
      */
     public function updateProfile(User $user, array $data): SellerProfile
     {
-        if (!$user->isSeller()) {
+        if (! $user->isSeller()) {
             throw new Exception('Only sellers can update a profile');
         }
 
         $profile = $user->sellerProfile;
 
-        if (!$profile) {
+        if (! $profile) {
             throw new Exception('Seller profile not found');
         }
 
@@ -76,12 +76,12 @@ class SellerProfileService
      */
     public function calculateAverageRating(User $seller): float
     {
-        if (!$seller->isSeller()) {
+        if (! $seller->isSeller()) {
             return 0;
         }
 
         $profile = $seller->sellerProfile;
-        if (!$profile) {
+        if (! $profile) {
             return 0;
         }
 

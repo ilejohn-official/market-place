@@ -6,12 +6,12 @@ use App\Http\Controllers\CallController;
 use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\EscrowController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SellerProfileController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WebhookController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,6 +32,9 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 // Public service endpoints
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/{id}', [ServiceController::class, 'show']);
+
+// Public reviews endpoint
+Route::get('/sellers/{sellerId}/reviews', [ReviewController::class, 'index']);
 
 // Public seller profile endpoint
 Route::get('/sellers/{sellerId}/profile', [SellerProfileController::class, 'showPublic']);
@@ -80,6 +83,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dispute routes
     Route::post('/bookings/{id}/disputes', [DisputeController::class, 'store']);
+
+    // Reviews
+    Route::post('/bookings/{id}/review', [ReviewController::class, 'store']);
 
     // Transactions
     Route::get('/transactions', [TransactionController::class, 'index']);

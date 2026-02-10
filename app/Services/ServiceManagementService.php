@@ -13,7 +13,7 @@ class ServiceManagementService
      */
     public function createService(User $seller, array $data): Service
     {
-        if (!$seller->isSeller()) {
+        if (! $seller->isSeller()) {
             throw new Exception('Only sellers can create services');
         }
 
@@ -89,7 +89,7 @@ class ServiceManagementService
     {
         $service = Service::find($serviceId);
 
-        if (!$service) {
+        if (! $service) {
             throw new Exception('Service not found');
         }
 
@@ -117,7 +117,7 @@ class ServiceManagementService
     {
         $service = Service::find($serviceId);
 
-        if (!$service) {
+        if (! $service) {
             throw new Exception('Service not found');
         }
 
@@ -126,6 +126,7 @@ class ServiceManagementService
         }
 
         $service->delete();
+
         return true;
     }
 
@@ -134,7 +135,7 @@ class ServiceManagementService
      */
     public function getSellerServices(User $seller, int $page = 1, int $limit = 15): array
     {
-        if (!$seller->isSeller()) {
+        if (! $seller->isSeller()) {
             throw new Exception('Only sellers have services');
         }
 

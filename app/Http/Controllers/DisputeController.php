@@ -6,14 +6,15 @@ use App\Http\Requests\DisputeRequest;
 use App\Http\Requests\DisputeResolutionRequest;
 use App\Models\Booking;
 use App\Models\Dispute;
-use App\Services\DisputeService;
 use App\Services\DisputeResolutionService;
+use App\Services\DisputeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DisputeController extends Controller
 {
     private DisputeService $disputeService;
+
     private DisputeResolutionService $disputeResolutionService;
 
     public function __construct(DisputeService $disputeService, DisputeResolutionService $disputeResolutionService)
@@ -28,7 +29,7 @@ class DisputeController extends Controller
     public function store(DisputeRequest $request, int $id): JsonResponse
     {
         $booking = Booking::find($id);
-        if (!$booking) {
+        if (! $booking) {
             return response()->json([
                 'message' => 'Booking not found',
             ], 404);
@@ -79,7 +80,7 @@ class DisputeController extends Controller
     public function resolve(DisputeResolutionRequest $request, int $id): JsonResponse
     {
         $dispute = Dispute::find($id);
-        if (!$dispute) {
+        if (! $dispute) {
             return response()->json([
                 'message' => 'Dispute not found',
             ], 404);

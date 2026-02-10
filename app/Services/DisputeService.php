@@ -12,11 +12,11 @@ class DisputeService
 {
     public function createDispute(User $buyer, Booking $booking, array $data): Dispute
     {
-        if (!$buyer->isBuyer() || $booking->buyer_id !== $buyer->id) {
+        if (! $buyer->isBuyer() || $booking->buyer_id !== $buyer->id) {
             throw new Exception('You are not authorized to dispute this booking');
         }
 
-        if (!in_array($booking->status, ['in_progress', 'pending_approval'], true)) {
+        if (! in_array($booking->status, ['in_progress', 'pending_approval'], true)) {
             throw new Exception('Booking cannot be disputed in its current status');
         }
 

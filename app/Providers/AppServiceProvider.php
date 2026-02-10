@@ -2,24 +2,24 @@
 
 namespace App\Providers;
 
-use App\Events\BookingCreated;
+use App\Contracts\PaymentGatewayInterface;
 use App\Events\BookingCancelled;
+use App\Events\BookingCreated;
 use App\Events\CallInitiated;
+use App\Events\DisputeResolved;
 use App\Events\EscrowCreated;
 use App\Events\FundsReleased;
 use App\Events\WorkMarkedComplete;
-use App\Events\DisputeResolved;
-use App\Listeners\NotifySellerBookingCreated;
-use App\Listeners\NotifyPartiesBookingCancelled;
-use App\Listeners\NotifyReceiverCallIncoming;
-use App\Listeners\NotifyPartsEscrowCreated;
 use App\Listeners\NotifyBuyerWorkComplete;
-use App\Listeners\NotifySellerFundsReleased;
+use App\Listeners\NotifyPartiesBookingCancelled;
 use App\Listeners\NotifyPartiesDisputeResolved;
-use App\Contracts\PaymentGatewayInterface;
+use App\Listeners\NotifyPartsEscrowCreated;
+use App\Listeners\NotifyReceiverCallIncoming;
+use App\Listeners\NotifySellerBookingCreated;
+use App\Listeners\NotifySellerFundsReleased;
 use App\Payments\PaystackPaymentGateway;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {

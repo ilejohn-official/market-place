@@ -12,15 +12,16 @@ use Illuminate\Http\Request;
 class BookingController extends Controller
 {
     protected BookingService $bookingService;
+
     protected PayoutService $payoutService;
+
     protected BookingCancellationService $cancellationService;
 
     public function __construct(
         BookingService $bookingService,
         PayoutService $payoutService,
         BookingCancellationService $cancellationService
-    )
-    {
+    ) {
         $this->bookingService = $bookingService;
         $this->payoutService = $payoutService;
         $this->cancellationService = $cancellationService;

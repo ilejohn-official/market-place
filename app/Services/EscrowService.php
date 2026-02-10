@@ -22,7 +22,7 @@ class EscrowService
 
     public function createEscrow(User $buyer, Booking $booking, float $amount): EscrowAccount
     {
-        if (!$buyer->isBuyer() || $booking->buyer_id !== $buyer->id) {
+        if (! $buyer->isBuyer() || $booking->buyer_id !== $buyer->id) {
             throw new Exception('You are not authorized to create escrow for this booking');
         }
 

@@ -8,9 +8,9 @@ use App\Models\Service;
 use App\Models\User;
 use Tests\TestCase;
 
-class DisputeTest extends TestCase
+class ReviewTest extends TestCase
 {
-    public function test_buyer_can_create_dispute(): void
+    public function test_buyer_can_review_completed_booking_and_list_reviews(): void
     {
         $buyer = User::factory()->create(['role' => 'buyer']);
         $seller = User::factory()->create(['role' => 'seller']);
@@ -28,16 +28,24 @@ class DisputeTest extends TestCase
             'seller_id' => $seller->id,
             'service_id' => $service->id,
             'agreed_amount' => 500,
-            'status' => 'pending_approval',
+            'status' => 'completed',
         ]);
 
-        $response = $this->actingAs($buyer, 'sanctum')
-            ->postJson("/api/bookings/{$booking->id}/disputes", [
-                'reason' => 'Work not delivered',
-                'description' => 'Seller missed deadline',
+        $createResponse = $this->actingAs($buyer, 'sanctum')
+            ->postJson("/api/bookings/{$booking->id}/review", [
+                'rating' => 5,
+                'review_text' => 'Great work',
             ]);
 
-        $response->assertStatus(201)
-            ->assertJsonPath('message', 'Dispute created successfully');
+        $createResponse->assertStatus(201)
+            ->assertJsonPath('data.rating', 5);
+
+        $listResponse = $this->getJson("/api/sellers/{$seller->id}/reviews");
+
+        $listResponse->assertStatus(200)
+            ->assertJsonPath('total', 1);
+
+        $profile = SellerProfile::where('user_id', $seller->id)->first();
+        $this->assertEquals(5, (float) $profile->rating);
     }
 }

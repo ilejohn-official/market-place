@@ -18,9 +18,6 @@ class SellerProfileController extends Controller
 
     /**
      * Create seller profile
-     *
-     * @param SellerProfileRequest $request
-     * @return JsonResponse
      */
     public function store(SellerProfileRequest $request): JsonResponse
     {
@@ -46,16 +43,13 @@ class SellerProfileController extends Controller
 
     /**
      * Get own seller profile
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function show(Request $request): JsonResponse
     {
         try {
             $profile = $this->sellerProfileService->getProfileByUser($request->user());
 
-            if (!$profile) {
+            if (! $profile) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Seller profile not found',
@@ -77,9 +71,6 @@ class SellerProfileController extends Controller
 
     /**
      * Update seller profile
-     *
-     * @param SellerProfileRequest $request
-     * @return JsonResponse
      */
     public function update(SellerProfileRequest $request): JsonResponse
     {
@@ -105,16 +96,13 @@ class SellerProfileController extends Controller
 
     /**
      * Get seller profile by ID (public endpoint)
-     *
-     * @param int $sellerId
-     * @return JsonResponse
      */
     public function showPublic(int $sellerId): JsonResponse
     {
         try {
             $profile = $this->sellerProfileService->getProfileById($sellerId);
 
-            if (!$profile) {
+            if (! $profile) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Seller profile not found',
