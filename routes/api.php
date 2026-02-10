@@ -3,10 +3,12 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CallController;
+use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\EscrowController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\SellerProfileController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Http\Request;
@@ -56,6 +58,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::get('/bookings', [BookingController::class, 'index']);
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
+    Route::patch('/bookings/{id}/mark-complete', [BookingController::class, 'markComplete']);
+    Route::patch('/bookings/{id}/approve', [BookingController::class, 'approve']);
 
     // Message routes
     Route::post('/bookings/{id}/messages', [MessageController::class, 'store']);
@@ -72,6 +76,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Escrow routes
     Route::post('/bookings/{id}/escrow', [EscrowController::class, 'store']);
     Route::get('/bookings/{id}/escrow', [EscrowController::class, 'show']);
+
+    // Dispute routes
+    Route::post('/bookings/{id}/disputes', [DisputeController::class, 'store']);
+
+    // Transactions
+    Route::get('/transactions', [TransactionController::class, 'index']);
 });
 
 // Payment webhooks

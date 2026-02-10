@@ -94,6 +94,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get transactions for this user
+     */
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

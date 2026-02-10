@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
+use App\Models\EscrowAccount;
 use App\Models\Service;
 use App\Models\SellerProfile;
 use App\Models\User;
+use App\Models\Wallet;
 use Tests\TestCase;
 
 class BookingTest extends TestCase
@@ -232,5 +234,52 @@ class BookingTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('total', 3);
+    }
+
+    public function test_seller_can_mark_work_complete()
+    {
+        $booking = Booking::create([
+            'buyer_id' => $this->buyer->id,
+            'seller_id' => $this->seller->id,
+            'service_id' => $this->service->id,
+            'agreed_amount' => 500,
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->actingAs($this->seller, 'sanctum')
+            ->patchJson("/api/bookings/{$booking->id}/mark-complete");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.status', 'pending_approval');
+    }
+
+    public function test_buyer_can_approve_completion()
+    {
+        $booking = Booking::create([
+            'buyer_id' => $this->buyer->id,
+            'seller_id' => $this->seller->id,
+            'service_id' => $this->service->id,
+            'agreed_amount' => 500,
+            'status' => 'pending_approval',
+        ]);
+
+        EscrowAccount::create([
+            'booking_id' => $booking->id,
+            'total_amount' => 500,
+            'platform_fee' => 50,
+            'freelancer_amount' => 450,
+            'status' => 'held',
+        ]);
+
+        Wallet::updateOrCreate(
+            ['user_id' => $this->seller->id],
+            ['balance' => 0, 'currency' => 'NGN']
+        );
+
+        $response = $this->actingAs($this->buyer, 'sanctum')
+            ->patchJson("/api/bookings/{$booking->id}/approve");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.status', 'completed');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\BookingCreated;
+use App\Events\WorkMarkedComplete;
 use App\Models\Booking;
 use App\Models\Service;
 use App\Models\User;
@@ -96,5 +97,27 @@ class BookingService
             'limit' => $limit,
             'pages' => ceil($total / $limit),
         ];
+    }
+
+    /**
+     * Mark work as complete (seller only)
+     */
+    public function markComplete(User $seller, Booking $booking): Booking
+    {
+        if (!$seller->isSeller() || $booking->seller_id !== $seller->id) {
+            throw new Exception('You are not authorized to mark this booking complete');
+        }
+
+        if ($booking->status !== 'in_progress') {
+            throw new Exception('Booking is not in progress');
+        }
+
+        $booking->update([
+            'status' => 'pending_approval',
+        ]);
+
+        Event::dispatch(new WorkMarkedComplete($booking));
+
+        return $booking;
     }
 }

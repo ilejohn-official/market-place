@@ -4,16 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BookingRequest;
 use App\Services\BookingService;
+use App\Services\PayoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
     protected BookingService $bookingService;
+    protected PayoutService $payoutService;
 
-    public function __construct(BookingService $bookingService)
+    public function __construct(BookingService $bookingService, PayoutService $payoutService)
     {
         $this->bookingService = $bookingService;
+        $this->payoutService = $payoutService;
     }
 
     /**
@@ -80,5 +83,45 @@ class BookingController extends Controller
                 'message' => $e->getMessage(),
             ], 403);
         }
+    }
+
+    /**
+     * Mark work as complete (seller only)
+     */
+    public function markComplete(Request $request, int $id): JsonResponse
+    {
+        try {
+            $booking = $this->bookingService->getBookingForUser($request->user(), $id);
+            $booking = $this->bookingService->markComplete($request->user(), $booking);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], $e->getMessage() === 'Booking not found' ? 404 : 403);
+        }
+
+        return response()->json([
+            'message' => 'Booking marked as complete',
+            'data' => $booking,
+        ], 200);
+    }
+
+    /**
+     * Approve completion and release funds (buyer only)
+     */
+    public function approve(Request $request, int $id): JsonResponse
+    {
+        try {
+            $booking = $this->bookingService->getBookingForUser($request->user(), $id);
+            $booking = $this->payoutService->releaseFunds($request->user(), $booking);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], $e->getMessage() === 'Booking not found' ? 404 : 403);
+        }
+
+        return response()->json([
+            'message' => 'Booking approved successfully',
+            'data' => $booking,
+        ], 200);
     }
 }
