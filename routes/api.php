@@ -3,9 +3,12 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CallController;
+use App\Http\Controllers\EscrowController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\SellerProfileController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\WalletController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -62,4 +65,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Call routes
     Route::post('/bookings/{id}/calls', [CallController::class, 'store']);
     Route::patch('/calls/{id}', [CallController::class, 'update']);
+
+    // Wallet routes
+    Route::get('/wallet', [WalletController::class, 'show']);
+
+    // Escrow routes
+    Route::post('/bookings/{id}/escrow', [EscrowController::class, 'store']);
+    Route::get('/bookings/{id}/escrow', [EscrowController::class, 'show']);
 });
+
+// Payment webhooks
+Route::post('/payments/webhook', [WebhookController::class, 'payment']);
