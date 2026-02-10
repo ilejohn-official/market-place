@@ -11,6 +11,7 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+    use \Laravel\Sanctum\HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -32,6 +34,22 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    /**
+     * Check if user is a buyer
+     */
+    public function isBuyer(): bool
+    {
+        return $this->role === 'buyer';
+    }
+
+    /**
+     * Check if user is a seller
+     */
+    public function isSeller(): bool
+    {
+        return $this->role === 'seller';
+    }
 
     /**
      * Get the attributes that should be cast.
