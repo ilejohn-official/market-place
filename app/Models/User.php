@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -49,6 +51,46 @@ class User extends Authenticatable
     public function isSeller(): bool
     {
         return $this->role === 'seller';
+    }
+
+    /**
+     * Get the seller profile for this user (if seller)
+     */
+    public function sellerProfile(): HasOne
+    {
+        return $this->hasOne(SellerProfile::class);
+    }
+
+    /**
+     * Get all services created by this user (if seller)
+     */
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class, 'seller_id');
+    }
+
+    /**
+     * Get all bookings where this user is buyer
+     */
+    public function buyerBookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'buyer_id');
+    }
+
+    /**
+     * Get all bookings where this user is seller
+     */
+    public function sellerBookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'seller_id');
+    }
+
+    /**
+     * Get the wallet for this user
+     */
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(Wallet::class);
     }
 
     /**
