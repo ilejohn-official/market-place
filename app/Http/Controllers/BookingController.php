@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BookingRequest;
+use App\Services\BookingCancellationService;
 use App\Services\BookingService;
 use App\Services\PayoutService;
 use Illuminate\Http\JsonResponse;
@@ -12,11 +13,17 @@ class BookingController extends Controller
 {
     protected BookingService $bookingService;
     protected PayoutService $payoutService;
+    protected BookingCancellationService $cancellationService;
 
-    public function __construct(BookingService $bookingService, PayoutService $payoutService)
+    public function __construct(
+        BookingService $bookingService,
+        PayoutService $payoutService,
+        BookingCancellationService $cancellationService
+    )
     {
         $this->bookingService = $bookingService;
         $this->payoutService = $payoutService;
+        $this->cancellationService = $cancellationService;
     }
 
     /**
@@ -121,6 +128,30 @@ class BookingController extends Controller
 
         return response()->json([
             'message' => 'Booking approved successfully',
+            'data' => $booking,
+        ], 200);
+    }
+
+    /**
+     * Cancel booking (buyer or seller)
+     */
+    public function cancel(Request $request, int $id): JsonResponse
+    {
+        try {
+            $booking = $this->bookingService->getBookingForUser($request->user(), $id);
+            $booking = $this->cancellationService->cancel(
+                $request->user(),
+                $booking,
+                $request->input('reason')
+            );
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], $e->getMessage() === 'Booking not found' ? 404 : 403);
+        }
+
+        return response()->json([
+            'message' => 'Booking cancelled successfully',
             'data' => $booking,
         ], 200);
     }

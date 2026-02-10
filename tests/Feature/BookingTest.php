@@ -282,4 +282,23 @@ class BookingTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('data.status', 'completed');
     }
+
+    public function test_buyer_can_cancel_pending_negotiation_booking()
+    {
+        $booking = Booking::create([
+            'buyer_id' => $this->buyer->id,
+            'seller_id' => $this->seller->id,
+            'service_id' => $this->service->id,
+            'agreed_amount' => 500,
+            'status' => 'pending_negotiation',
+        ]);
+
+        $response = $this->actingAs($this->buyer, 'sanctum')
+            ->patchJson("/api/bookings/{$booking->id}/cancel", [
+                'reason' => 'No longer needed',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.status', 'cancelled');
+    }
 }

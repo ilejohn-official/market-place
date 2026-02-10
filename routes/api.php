@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::patch('/bookings/{id}/mark-complete', [BookingController::class, 'markComplete']);
     Route::patch('/bookings/{id}/approve', [BookingController::class, 'approve']);
+    Route::patch('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
 
     // Message routes
     Route::post('/bookings/{id}/messages', [MessageController::class, 'store']);
@@ -86,3 +87,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Payment webhooks
 Route::post('/payments/webhook', [WebhookController::class, 'payment']);
+
+// Admin dispute resolution (commit 16)
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('/disputes', [DisputeController::class, 'index']);
+    Route::patch('/disputes/{id}/resolve', [DisputeController::class, 'resolve']);
+});
