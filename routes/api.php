@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CallController;
+use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\EscrowController;
 use App\Http\Controllers\MessageController;
@@ -32,6 +33,9 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 // Public service endpoints
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/{id}', [ServiceController::class, 'show']);
+
+// Public seller discovery
+Route::get('/sellers', [DiscoveryController::class, 'sellers']);
 
 // Public reviews endpoint
 Route::get('/sellers/{sellerId}/reviews', [ReviewController::class, 'index']);
