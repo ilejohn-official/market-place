@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SellerProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,10 +20,18 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
+// Public seller profile endpoint
+Route::get('/sellers/{sellerId}/profile', [SellerProfileController::class, 'showPublic']);
+
 // Protected routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::get('/auth/profile', [AuthController::class, 'profile']);
     Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    // Seller profile routes
+    Route::post('/profile/seller', [SellerProfileController::class, 'store']);
+    Route::get('/profile/seller', [SellerProfileController::class, 'show']);
+    Route::put('/profile/seller', [SellerProfileController::class, 'update']);
 });

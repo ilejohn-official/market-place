@@ -21,6 +21,13 @@ class SellerProfileRequest extends FormRequest
      */
     public function rules(): array
     {
+        if ($this->isMethod('PUT')) {
+            return [
+                'hourly_rate' => 'sometimes|numeric|min:0.01',
+                'experience_level' => 'sometimes|in:beginner,intermediate,expert',
+            ];
+        }
+
         return [
             'hourly_rate' => 'required|numeric|min:0.01',
             'experience_level' => 'required|in:beginner,intermediate,expert',
