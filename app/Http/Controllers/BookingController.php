@@ -3,16 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BookingRequest;
-use App\Models\Booking;
-use App\Services\BookingManagementService;
+use App\Services\BookingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
-    protected BookingManagementService $bookingService;
+    protected BookingService $bookingService;
 
-    public function __construct(BookingManagementService $bookingService)
+    public function __construct(BookingService $bookingService)
     {
         $this->bookingService = $bookingService;
     }
@@ -33,6 +32,12 @@ class BookingController extends Controller
                 'data' => $booking->load(['buyer', 'seller', 'service', 'escrowAccount']),
             ], 201);
         } catch (\Exception $e) {
+            if (in_array($e->getMessage(), ['Seller not found', 'Service not found'], true)) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                ], 404);
+            }
+
             return response()->json([
                 'message' => $e->getMessage(),
             ], 403);
@@ -42,14 +47,14 @@ class BookingController extends Controller
     /**
      * Get booking details
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
-        $booking = $this->bookingService->getBookingDetails($id);
-
-        if (!$booking) {
+        try {
+            $booking = $this->bookingService->getBookingForUser($request->user(), $id);
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Booking not found',
-            ], 404);
+                'message' => $e->getMessage(),
+            ], $e->getMessage() === 'Booking not found' ? 404 : 403);
         }
 
         return response()->json([
@@ -58,48 +63,16 @@ class BookingController extends Controller
     }
 
     /**
-     * Update booking status
-     */
-    public function updateStatus(BookingRequest $request, int $id): JsonResponse
-    {
-        try {
-            $booking = $this->bookingService->updateBookingStatus(
-                $request->user(),
-                $id,
-                $request->validated()['status']
-            );
-
-            return response()->json([
-                'message' => 'Booking status updated successfully',
-                'data' => $booking->load(['buyer', 'seller', 'service', 'escrowAccount']),
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], $e->getMessage() === 'Booking not found' ? 404 : 403);
-        }
-    }
-
-    /**
      * Get current user's bookings
      */
-    public function myBookings(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
             $page = $request->input('page', 1);
             $limit = $request->input('limit', 15);
+            $filters = $request->only(['status']);
 
-            // Check if buyer or seller and get appropriate bookings
-            $user = $request->user();
-            if ($user->isBuyer()) {
-                $result = $this->bookingService->getBuyerBookings($user, $page, $limit);
-            } else if ($user->isSeller()) {
-                $result = $this->bookingService->getSellerBookings($user, $page, $limit);
-            } else {
-                return response()->json([
-                    'message' => 'Invalid user role',
-                ], 403);
-            }
+            $result = $this->bookingService->getUserBookings($request->user(), $page, $limit, $filters);
 
             return response()->json($result, 200);
         } catch (\Exception $e) {

@@ -13,17 +13,11 @@ class BookingRequest extends FormRequest
 
     public function rules(): array
     {
-        if ($this->isMethod('PUT')) {
-            return [
-                'status' => 'sometimes|in:pending_negotiation,in_progress,pending_approval,completed,disputed,cancelled,refunded',
-            ];
-        }
-
         return [
             'service_id' => 'required|integer|exists:services,id',
             'seller_id' => 'required|integer|exists:users,id',
             'proposed_amount' => 'required|numeric|min:0.01',
-            'description' => 'sometimes|string|max:5000',
+            'negotiation_notes' => 'sometimes|string|max:5000',
         ];
     }
 }

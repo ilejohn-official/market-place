@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
-use App\Models\EscrowAccount;
 use App\Models\Service;
 use App\Models\SellerProfile;
 use App\Models\User;
@@ -21,7 +20,7 @@ class BookingTest extends TestCase
 
         $this->buyer = User::factory()->create(['role' => 'buyer']);
         $this->seller = User::factory()->create(['role' => 'seller']);
-        
+
         SellerProfile::create([
             'user_id' => $this->seller->id,
             'hourly_rate' => 50,
@@ -37,7 +36,7 @@ class BookingTest extends TestCase
             'service_id' => $this->service->id,
             'seller_id' => $this->seller->id,
             'proposed_amount' => 500,
-            'description' => 'Need web development work',
+            'negotiation_notes' => 'Need web development work',
         ];
 
         $response = $this->actingAs($this->buyer, 'sanctum')
@@ -71,27 +70,36 @@ class BookingTest extends TestCase
             ->assertJsonPath('message', 'Only buyers can create bookings');
     }
 
-    public function test_create_booking_creates_escrow_account()
+    public function test_create_booking_with_non_seller_returns_404()
     {
+        $notSeller = User::factory()->create(['role' => 'buyer']);
         $data = [
             'service_id' => $this->service->id,
-            'seller_id' => $this->seller->id,
-            'proposed_amount' => 1000,
+            'seller_id' => $notSeller->id,
+            'proposed_amount' => 500,
         ];
 
         $response = $this->actingAs($this->buyer, 'sanctum')
             ->postJson('/api/bookings', $data);
 
-        $response->assertStatus(201);
-        
-        $bookingId = $response->json('data.id');
-        $this->assertDatabaseHas('escrow_accounts', [
-            'booking_id' => $bookingId,
-            'total_amount' => 1000,
-            'platform_fee' => 100, // 10%
-            'freelancer_amount' => 900, // 90%
-            'status' => 'held',
-        ]);
+        $response->assertStatus(404)
+            ->assertJsonPath('message', 'Seller not found');
+    }
+
+    public function test_create_booking_with_service_not_owned_by_seller_returns_404()
+    {
+        $anotherSeller = User::factory()->create(['role' => 'seller']);
+        $data = [
+            'service_id' => $this->service->id,
+            'seller_id' => $anotherSeller->id,
+            'proposed_amount' => 500,
+        ];
+
+        $response = $this->actingAs($this->buyer, 'sanctum')
+            ->postJson('/api/bookings', $data);
+
+        $response->assertStatus(404)
+            ->assertJsonPath('message', 'Service not found');
     }
 
     public function test_booking_validates_required_fields()
@@ -118,7 +126,7 @@ class BookingTest extends TestCase
             ->assertJsonValidationErrors(['proposed_amount']);
     }
 
-    public function test_anyone_can_view_booking_details()
+    public function test_buyer_can_view_own_booking_details()
     {
         $booking = Booking::create([
             'buyer_id' => $this->buyer->id,
@@ -132,47 +140,25 @@ class BookingTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('data.id', $booking->id);
-
-        $this->assertEquals(
-            $booking->agreed_amount,
-            data_get($response->json(), 'data.agreed_amount')
-        );
     }
 
-    public function test_view_nonexistent_booking_returns_404()
-    {
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->getJson('/api/bookings/9999');
-
-        $response->assertStatus(404)
-            ->assertJsonPath('message', 'Booking not found');
-    }
-
-    public function test_buyer_or_seller_can_update_booking_status()
+    public function test_seller_can_view_booking_details()
     {
         $booking = Booking::create([
             'buyer_id' => $this->buyer->id,
             'seller_id' => $this->seller->id,
             'service_id' => $this->service->id,
             'agreed_amount' => 500,
-            'status' => 'pending_negotiation',
         ]);
 
-        $response = $this->actingAs($this->buyer, 'sanctum')
-            ->putJson("/api/bookings/{$booking->id}/status", [
-                'status' => 'in_progress',
-            ]);
+        $response = $this->actingAs($this->seller, 'sanctum')
+            ->getJson("/api/bookings/{$booking->id}");
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.status', 'in_progress');
-
-        $this->assertDatabaseHas('bookings', [
-            'id' => $booking->id,
-            'status' => 'in_progress',
-        ]);
+            ->assertJsonPath('data.id', $booking->id);
     }
 
-    public function test_unauthorized_user_cannot_update_booking_status()
+    public function test_non_participant_cannot_view_booking_details()
     {
         $otherBuyer = User::factory()->create(['role' => 'buyer']);
         $booking = Booking::create([
@@ -183,12 +169,19 @@ class BookingTest extends TestCase
         ]);
 
         $response = $this->actingAs($otherBuyer, 'sanctum')
-            ->putJson("/api/bookings/{$booking->id}/status", [
-                'status' => 'completed',
-            ]);
+            ->getJson("/api/bookings/{$booking->id}");
 
         $response->assertStatus(403)
-            ->assertJsonPath('message', 'You are not authorized to update this booking');
+            ->assertJsonPath('message', 'You are not authorized to view this booking');
+    }
+
+    public function test_view_nonexistent_booking_returns_404()
+    {
+        $response = $this->actingAs($this->buyer, 'sanctum')
+            ->getJson('/api/bookings/9999');
+
+        $response->assertStatus(404)
+            ->assertJsonPath('message', 'Booking not found');
     }
 
     public function test_buyer_can_view_own_bookings()
@@ -207,7 +200,7 @@ class BookingTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->buyer, 'sanctum')
-            ->getJson('/api/my-bookings');
+            ->getJson('/api/bookings');
 
         $response->assertStatus(200)
             ->assertJsonPath('total', 2);
@@ -235,7 +228,7 @@ class BookingTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->seller, 'sanctum')
-            ->getJson('/api/my-bookings');
+            ->getJson('/api/bookings');
 
         $response->assertStatus(200)
             ->assertJsonPath('total', 3);

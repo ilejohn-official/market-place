@@ -47,9 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
     Route::get('/my-services', [ServiceController::class, 'myServices']);
 
-    // Booking routes (buyer for create, both for status updates)
+    // Booking routes (buyer for create, buyer/seller for read)
     Route::post('/bookings', [BookingController::class, 'store']);
+    Route::get('/bookings', [BookingController::class, 'index']);
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
-    Route::put('/bookings/{id}/status', [BookingController::class, 'updateStatus']);
-    Route::get('/my-bookings', [BookingController::class, 'myBookings']);
 });
