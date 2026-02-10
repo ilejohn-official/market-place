@@ -26,7 +26,7 @@ class Booking extends Model
     ];
 
     protected $casts = [
-        'agreed_amount' => 'decimal:2',
+        'agreed_amount' => 'float',
         'completed_at' => 'datetime',
         'start_date' => 'date',
         'due_date' => 'date',

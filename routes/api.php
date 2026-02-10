@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\SellerProfileController;
 use App\Http\Controllers\ServiceController;
 use Illuminate\Http\Request;
@@ -45,4 +46,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/services/{id}', [ServiceController::class, 'update']);
     Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
     Route::get('/my-services', [ServiceController::class, 'myServices']);
+
+    // Booking routes (buyer for create, both for status updates)
+    Route::post('/bookings', [BookingController::class, 'store']);
+    Route::get('/bookings/{id}', [BookingController::class, 'show']);
+    Route::put('/bookings/{id}/status', [BookingController::class, 'updateStatus']);
+    Route::get('/my-bookings', [BookingController::class, 'myBookings']);
 });
